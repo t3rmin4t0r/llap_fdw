@@ -74,7 +74,8 @@ class LlapFdw(ForeignDataWrapper):
 		self.cols = fdw_columns
 		self.options = fdw_options
 	def execute(self, quals, columns, sortkeys=None):
-		query = "select %s from %s" % ( ",".join(columns), self.options["table"])
+		source = self.options["table"]
+		query = "select %s from %s" % ( ",".join(columns), source)
 		log_to_postgres(str(query), WARNING)
 		log_to_postgres(str(quals), WARNING)
 		cur = self.conn.cursor()
