@@ -1,8 +1,9 @@
 from multicorn import ForeignDataWrapper, TableDefinition, ColumnDefinition
+from multicorn import ANY, ALL
 from multicorn.utils import log_to_postgres, ERROR, WARNING, DEBUG
 
 from pyhive import hive as llap
-	
+
 class LlapConnection(object):
 	def __init__(self, hostname='localhost', port=10000, schema='default', username='anonymous', **kwargs):
 		basic_conf = {'hive.cli.print.header' : 'false'}
@@ -62,7 +63,25 @@ class LlapConnection(object):
 			return ColumnDefinition(name, type_name=_type) 
 		else:
 			log_to_postgres('Cannot handle type %s' % _type)
-		
+
+
+def to_sarg(q):
+	easy_quals = ['=', '>', '>=', '<=', '<>']
+	quote = lambda target : isinstance(target, str) or isinstance(target, unicode)
+	if q.operator in easy_quals:
+		return ("`%s` %s %%s" % (q.field_name, q.operator), q.value) 
+	return None
+
+	
+def to_sargs(quals):
+	log_to_postgres(str(quals), WARNING)
+	good_quals = ['=', '>', '>=', '<=', '<>', ('=', True), ('<>',  False)]
+	converted = [to_sarg(q) for q in quals if q.operator in good_quals]
+	sargs = " and " .join(["(%s)" % a[0] for a in converted if a])
+	params = [a[1] for a in converted if a]
+	return (sargs, params)
+	
+
 class LlapFdw(ForeignDataWrapper):
 	def __init__(self, fdw_options, fdw_columns):
 		super(LlapFdw, self).__init__(fdw_options, fdw_columns)
@@ -73,14 +92,25 @@ class LlapFdw(ForeignDataWrapper):
 		self.conn = LlapConnection(**fdw_options)
 		self.cols = fdw_columns
 		self.options = fdw_options
-	def execute(self, quals, columns, sortkeys=None):
+	def build_query(self, quals, columns, sortkeys=None):
 		source = self.options["table"]
-		query = "select %s from %s" % ( ",".join(columns), source)
-		log_to_postgres(str(query), WARNING)
-		log_to_postgres(str(quals), WARNING)
+		query = "select %s from `%s` " % ( ",".join(map(lambda a : '`%s`' % a, columns)), source)
+		sargs, params = to_sargs(quals)
+		if (sargs):
+			query += " where %s" % (sargs) 
+		log_to_postgres(query, WARNING)
+		return query,params
+	def explain(self, quals, columns, sortkeys=None, verbose=False):
+		q,p = self.build_query(quals, columns, sortkeys=None)
+		if p:
+			return [q % llap.HiveParamEscaper().escape_args(p)]
+		else:
+			return [q]
+	def execute(self, quals, columns, sortkeys=None):
+		query,params = self.build_query(quals, columns, sortkeys)
 		cur = self.conn.cursor()
 		try:
-			cur.execute(query)
+			cur.execute(query,parameters=params)
 			for r in cur.fetchall():
 				yield dict(zip(columns,r))
 		finally:
