@@ -66,7 +66,7 @@ class LlapConnection(object):
 
 
 def to_sarg(q):
-	easy_quals = ['=', '>', '>=', '<=', '<>']
+	easy_quals = ['=', '>', '>=', '<', '<=', '<>']
 	quote = lambda target : isinstance(target, str) or isinstance(target, unicode)
 	if q.operator in easy_quals:
 		return ("`%s` %s %%s" % (q.field_name, q.operator), q.value) 
