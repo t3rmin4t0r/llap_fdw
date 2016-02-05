@@ -79,13 +79,21 @@ Create the CUBE view
 
     gopal=# select * from llap0.dd where cd_gender='F';
      cd_gender | cd_marital_status |  _c2   
-    -----------+-------------------+--------
-    F         |                   | 823200
-    F         | D                 | 164640
-    F         | M                 | 164640
-    F         | S                 | 164640
-    F         | U                 | 164640
-    F         | W                 | 164640
-    (6 rows)
-    
-    Time: 0.580 ms
+       -----------+-------------------+--------
+        F         |                   | 823200
+        F         | D                 | 164640
+        F         | M                 | 164640
+        F         | S                 | 164640
+        F         | U                 | 164640
+        F         | W                 | 164640
+        (6 rows)
+      Time: 0.580 ms
+
+## Use the CUBE columns for concurrent/lazy refreshes
+
+        gopal=# CREATE UNIQUE INDEX dd_u_idx ON llap0.dd (cd_gender, cd_marital_status);
+        gopal=# REFRESH MATERIALIZED VIEW concurrently llap0.dd;
+        WARNING:  []
+        WARNING:  select `_c2`,`cd_marital_status`,`cd_gender` from `dependent_dist` 
+        REFRESH MATERIALIZED VIEW
+        Time: 1627.088 ms
