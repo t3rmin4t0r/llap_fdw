@@ -130,6 +130,7 @@ class LlapFdw(ForeignDataWrapper):
 				for c in conn.list_columns(table):
 					 ftable.columns.append(conn.convert_coltype(c))
 				to_import.append(ftable)
+				log_to_postgres('We are attemping to import %s.%s' % (schema, table), WARNING)
 			return to_import
 		finally:
 			conn or conn.close()
