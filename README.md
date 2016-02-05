@@ -4,6 +4,8 @@ Postgres is fast, it is stable and best of all [flexible](http://www.postgresql.
 
 With the help of some small libraries and Postgres, we can turn Postgres into a service view for LLAP.
 
+![Small Demo](https://people.apache.org/~gopalv/llap_fdw_opt.gif)
+
 ## Install 
 
 This needs Postgres 9.5 to run + a hive-2.0 JDBC server (LLAP ideal).
