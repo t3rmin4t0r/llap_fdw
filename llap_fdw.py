@@ -136,11 +136,9 @@ class LlapFdw(ForeignDataWrapper):
 
 def main(args):
 
-	c = LlapConnection(host='cn105-10', port=10003, database='testing')
+	c = LlapConnection(host='cn105-10', port=10003, schema='tpcds_bin_partitioned_orc_200')
 	for t in c.list_tables():
-		c.list_columns(t)
-	for x in c.list_columns("alltypes"):
-		print x
+		print t, list(c.list_columns(t))
 
 if __name__ == '__main__':
 	import sys
