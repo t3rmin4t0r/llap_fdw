@@ -92,7 +92,7 @@ Create the CUBE view
 ## Use the CUBE columns for concurrent/lazy refreshes
 
         gopal=# CREATE UNIQUE INDEX dd_u_idx ON llap0.dd (cd_gender, cd_marital_status);
-        gopal=# REFRESH MATERIALIZED VIEW concurrently llap0.dd;
+        gopal=# REFRESH MATERIALIZED VIEW CONCURRENTLY llap0.dd;
         WARNING:  []
         WARNING:  select `_c2`,`cd_marital_status`,`cd_gender` from `dependent_dist` 
         REFRESH MATERIALIZED VIEW
